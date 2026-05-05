@@ -4,32 +4,21 @@ Monorepo containing:
 - **`backend/`**: FastAPI + LangGraph (Sense → Reason → Act), **TiDB (MySQL-compatible)** (memory + logs), optional Redis
 - **`frontend/`**: Next.js 14 (App Router) dashboard (Tailwind + shadcn/ui style components)
 
-### Local dev (recommended)
+### Quick Start
 
-1) Start databases:
+**See [LOCAL_SETUP.md](./LOCAL_SETUP.md) for detailed instructions.**
 
+#### Without Docker (Recommended for Windows)
+1. Install PostgreSQL 16+ and Node.js 18+
+2. Create database `sispaa_router`
+3. Backend: `cd backend && python -m venv .venv && .venv\Scripts\Activate.ps1 && pip install -r requirements.txt && uvicorn app.main:app --reload`
+4. Frontend: `cd frontend && npm install && npm run dev`
+
+#### With Docker (macOS/Linux)
 ```bash
 docker compose up -d
-```
-
-2) Backend:
-
-```bash
-cd backend
-python -m venv .venv
-. .venv/bin/activate  # Windows: .venv\\Scripts\\Activate.ps1
-pip install -r requirements.txt
-cp .env.example .env
-uvicorn app.main:app --reload --port 8000
-```
-
-3) Frontend:
-
-```bash
-cd frontend
-npm install
-cp .env.example .env.local
-npm run dev
+cd backend && pip install -r requirements.txt && uvicorn app.main:app --reload
+cd frontend && npm install && npm run dev
 ```
 
 Open:
