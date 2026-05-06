@@ -163,7 +163,7 @@ export default function UserManagement() {
                     >
                       <option value="admin">Admin</option>
                       <option value="supervisor">Supervisor</option>
-                      <option value="worker">Worker</option>
+                      <option value="worker">Staff</option>
                       <option value="public">Public</option>
                     </select>
                   ) : (

@@ -10,9 +10,12 @@ from app.db.session import engine
 async def init_db() -> None:
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-        await conn.execute(text("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS email VARCHAR(255)"))
-        await conn.execute(text("ALTER TABLE work_orders ADD COLUMN IF NOT EXISTS assigned_to VARCHAR(36)"))
-        await conn.execute(text("ALTER TABLE work_orders ADD COLUMN IF NOT EXISTS assigned_by VARCHAR(36)"))
-        await conn.execute(text("ALTER TABLE work_orders ADD COLUMN IF NOT EXISTS assigned_at TIMESTAMP WITH TIME ZONE"))
-        await conn.execute(text("ALTER TABLE work_orders ADD COLUMN IF NOT EXISTS completed_at TIMESTAMP WITH TIME ZONE"))
+        
+        # Only run these Postgres-specific migrations if using Postgres
+        if engine.dialect.name == "postgresql":
+            await conn.execute(text("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS email VARCHAR(255)"))
+            await conn.execute(text("ALTER TABLE work_orders ADD COLUMN IF NOT EXISTS assigned_to VARCHAR(36)"))
+            await conn.execute(text("ALTER TABLE work_orders ADD COLUMN IF NOT EXISTS assigned_by VARCHAR(36)"))
+            await conn.execute(text("ALTER TABLE work_orders ADD COLUMN IF NOT EXISTS assigned_at TIMESTAMP WITH TIME ZONE"))
+            await conn.execute(text("ALTER TABLE work_orders ADD COLUMN IF NOT EXISTS completed_at TIMESTAMP WITH TIME ZONE"))
 

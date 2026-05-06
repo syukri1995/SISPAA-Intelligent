@@ -88,12 +88,12 @@ export default function DashboardPage() {
     );
   }
 
-  // Worker Dashboard
+  // Staff Dashboard
   if (user.role === "worker") {
     return (
       <div className="space-y-6">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold">Worker Dashboard</h1>
+          <h1 className="text-3xl font-bold">Staff Dashboard</h1>
           <p className="text-gray-600">Your assigned work orders and tasks</p>
         </div>
 

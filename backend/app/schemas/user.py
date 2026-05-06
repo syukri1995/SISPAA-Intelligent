@@ -13,10 +13,12 @@ class UserRegister(BaseModel):
 
     @field_validator("role", mode="before")
     @classmethod
-    def force_public_role(cls, v: str) -> str:
-        """Self-registration always creates a public user.
-        Role elevation is done by admins via PATCH /auth/users/{id}."""
-        return "public"
+    def validate_role(cls, v: str) -> str:
+        """Allow public or worker (staff) roles on registration. 
+        Admin/supervisor must be elevated later."""
+        if v not in {"public", "worker"}:
+            return "public"
+        return v
 
 
 class UserLogin(BaseModel):

@@ -30,7 +30,6 @@ export function Sidebar() {
         : user?.role === "worker"
           ? [
               { href: "/dashboard", label: "Dashboard" },
-              { href: "/worker/dashboard", label: "Worker Dashboard" },
               { href: "/work-orders", label: "Work Orders" },
               { href: "/submit", label: "Submit Complaint" },
               { href: "/logs", label: "Logs" },

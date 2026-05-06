@@ -32,8 +32,8 @@ async def register(payload: UserRegister, session: AsyncSession = Depends(get_se
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Email already exists")
 
-    # Role is always "public" on self-registration (enforced by UserRegister schema validator).
-    # Use PUT /auth/users/{id} (admin only) to assign elevated roles.
+    # Role is restricted to "public" or "worker" on self-registration (enforced by UserRegister schema validator).
+    # Use PUT /auth/users/{id} (admin only) to assign supervisor or admin roles.
 
     # Create new user
     user = User(

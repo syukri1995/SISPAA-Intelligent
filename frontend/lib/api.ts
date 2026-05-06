@@ -62,6 +62,7 @@ export async function registerUser(data: {
   password: string;
   full_name?: string;
   agency?: string;
+  role?: string;
 }) {
   const r = await fetch(`${baseUrl}/auth/register`, {
     method: "POST",

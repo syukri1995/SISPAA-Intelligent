@@ -13,6 +13,7 @@ export default function RegisterPage() {
     email: "",
     password: "",
     full_name: "",
+    role: "public",
     agency: "",
   });
   const [error, setError] = useState("");
@@ -51,7 +52,7 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-gradient-to-br from-gov-primary to-gov-primary/80 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
         <h1 className="text-3xl font-bold text-gov-primary mb-2">SISPAA</h1>
-        <p className="text-gray-600 mb-6">Create Worker Account</p>
+        <p className="text-gray-600 mb-6">Create Account</p>
 
         {error && (
           <div className="bg-red-50 text-red-700 p-3 rounded-lg mb-4 text-sm">
@@ -106,13 +107,31 @@ export default function RegisterPage() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Agency
+              Account Type
+            </label>
+            <select
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gov-accent focus:border-transparent"
+            >
+              <option value="public">Public</option>
+              <option value="worker">Staff</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Agency {formData.role === "public" && "(Staff Only)"}
             </label>
             <select
               name="agency"
               value={formData.agency}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gov-accent focus:border-transparent"
+              disabled={formData.role === "public"}
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-gov-accent focus:border-transparent ${
+                formData.role === "public" ? "bg-gray-100 text-gray-500 border-gray-200" : "border-gray-300"
+              }`}
             >
               <option value="">Select agency</option>
               <option value="DBKL">DBKL (City Hall)</option>
