@@ -30,6 +30,14 @@ class Settings(BaseSettings):
     groq_api_key: str | None = None
     groq_model: str = "llama-3.1-70b-versatile"
 
+    # Complaint lifecycle / SLA
+    sla_accept_within_hours: int = 4
+    sla_auto_close_after_days: int = 7
+    sla_deadline_hours_low: int = 72
+    sla_deadline_hours_medium: int = 24
+    sla_deadline_hours_high: int = 4
+    lifecycle_job_interval_seconds: int = 60
+
     @property
     def cors_origins_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]

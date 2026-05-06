@@ -13,26 +13,27 @@ export function Sidebar() {
     user?.role === "admin"
       ? [
           { href: "/dashboard", label: "Dashboard" },
-          { href: "/admin", label: "Admin Home" },
-          { href: "/admin/users", label: "Users" },
-          { href: "/admin/analytics", label: "Analytics" },
-          { href: "/logs", label: "Logs" },
+          { href: "/complaints", label: "Complaint List" },
           { href: "/work-orders", label: "Work Orders" },
-          { href: "/submit", label: "Submit Complaint" },
+          { href: "/analytics", label: "Analytics" },
+          { href: "/logs", label: "Audit Logs" },
+          { href: "/admin/users", label: "User Management" },
+          { href: "/admin/settings", label: "Admin Settings" },
         ]
       : user?.role === "supervisor"
         ? [
             { href: "/dashboard", label: "Dashboard" },
+            { href: "/complaints", label: "Complaint List" },
             { href: "/work-orders", label: "Work Orders" },
-            { href: "/logs", label: "Logs" },
-            { href: "/submit", label: "Submit Complaint" },
+            { href: "/analytics", label: "Analytics" },
+            { href: "/logs", label: "Audit Logs" },
           ]
         : user?.role === "worker"
           ? [
               { href: "/dashboard", label: "Dashboard" },
+              { href: "/complaints", label: "Complaint List" },
               { href: "/work-orders", label: "Work Orders" },
-              { href: "/submit", label: "Submit Complaint" },
-              { href: "/logs", label: "Logs" },
+              { href: "/logs", label: "Audit Logs" },
             ]
           : [
               { href: "/dashboard", label: "Dashboard" },
@@ -41,9 +42,13 @@ export function Sidebar() {
             ];
 
   return (
-    <aside className="w-64 bg-gov-primary text-white hidden md:flex md:flex-col">
-      <div className="h-14 px-5 flex items-center border-b border-white/10">
-        <div className="font-semibold tracking-wide">SISPAA Router</div>
+    <aside className="w-72 bg-gov-primary text-white hidden md:flex md:flex-col">
+      <div className="h-14 px-5 flex items-center gap-3 border-b border-white/10">
+        <div aria-hidden className="h-8 w-8 rounded-md bg-white/10" />
+        <div className="leading-tight">
+          <div className="font-semibold tracking-wide">SISPAA Router</div>
+          <div className="text-[11px] text-white/70">Malaysia GovTech UI</div>
+        </div>
       </div>
       <nav className="p-3 space-y-1">
         {items.map((it) => (
@@ -61,7 +66,7 @@ export function Sidebar() {
         ))}
       </nav>
       <div className="mt-auto p-4 text-xs text-white/70 border-t border-white/10">
-        Government-grade prototype UI
+        For internal government use. Prototype UI.
       </div>
     </aside>
   );

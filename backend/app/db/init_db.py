@@ -14,6 +14,11 @@ async def init_db() -> None:
         # Only run these Postgres-specific migrations if using Postgres
         if engine.dialect.name == "postgresql":
             await conn.execute(text("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS email VARCHAR(255)"))
+            await conn.execute(text("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS title VARCHAR(255)"))
+            await conn.execute(text("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS description TEXT"))
+            await conn.execute(text("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS category VARCHAR(64)"))
+            await conn.execute(text("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS priority VARCHAR(16)"))
+            await conn.execute(text("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS status VARCHAR(32)"))
             await conn.execute(text("ALTER TABLE work_orders ADD COLUMN IF NOT EXISTS assigned_to VARCHAR(36)"))
             await conn.execute(text("ALTER TABLE work_orders ADD COLUMN IF NOT EXISTS assigned_by VARCHAR(36)"))
             await conn.execute(text("ALTER TABLE work_orders ADD COLUMN IF NOT EXISTS assigned_at TIMESTAMP WITH TIME ZONE"))

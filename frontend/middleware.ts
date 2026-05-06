@@ -27,6 +27,11 @@ async function getTokenPayload(req: NextRequest): Promise<JWTPayload | null> {
 }
 
 export async function middleware(req: NextRequest) {
+  // E2E bypass (Playwright). Keep disabled by default.
+  if (process.env.E2E_BYPASS_AUTH === "1") {
+    return NextResponse.next();
+  }
+
   const { pathname } = req.nextUrl;
   const tokenPayload = await getTokenPayload(req);
   const authed = tokenPayload !== null;
@@ -88,5 +93,17 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/worker/:path*", "/admin/:path*", "/auth/:path*", "/dashboard", "/submit", "/status"],
+  matcher: [
+    "/",
+    "/worker/:path*",
+    "/admin/:path*",
+    "/auth/:path*",
+    "/dashboard",
+    "/submit",
+    "/status",
+    "/logs",
+    "/analytics",
+    "/complaints/:path*",
+    "/work-orders",
+  ],
 };

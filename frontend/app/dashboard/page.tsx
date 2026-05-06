@@ -2,27 +2,34 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { KPIcard } from "@/components/KPIcard";
-import { WorkflowStepper } from "@/components/WorkflowStepper";
-import { ComplaintTable, type RecentComplaintRow } from "@/components/ComplaintTable";
-import { getMetrics, getRecentComplaints } from "@/lib/api";
-import { getCurrentUser, hasRole } from "@/lib/auth";
+import Link from "next/link";
+import { ResponsiveContainer, Area, AreaChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
+import { getMetrics, getRecentComplaints, getWorkerDashboard } from "@/lib/api";
+import { getCurrentUser } from "@/lib/auth";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Card, CardBody, CardHeader, CardTitle, CardKPI } from "@/components/ui/Card";
+import { Alert } from "@/components/ui/Alert";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { SmartInsightsPanel } from "@/components/SmartInsightsPanel";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [metrics, setMetrics] = useState<any>(null);
-  const [rows, setRows] = useState<RecentComplaintRow[]>([]);
-  const [query, setQuery] = useState("");
   const [user, setUser] = useState(getCurrentUser());
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [metrics, setMetrics] = useState<any>(null);
+  const [worker, setWorker] = useState<any>(null);
+  const [recent, setRecent] = useState<any[]>([]);
 
   const active = useMemo(() => {
-    const latest = rows[0];
-    if (!latest) return "Complaint";
-    if (latest.status === "COMPLETED") return "Completed";
-    return "Reason";
-  }, [rows]);
-
-  const confidence = rows[0]?.confidence ?? null;
+    const latest = recent[0];
+    if (!latest) return { label: "No activity", tone: "neutral" as const };
+    if ((latest.status || "").toUpperCase() === "COMPLETED") return { label: "Completed", tone: "good" as const };
+    if ((latest.status || "").toUpperCase() === "IN_PROGRESS") return { label: "In progress", tone: "info" as const };
+    return { label: "Received", tone: "warn" as const };
+  }, [recent]);
 
   useEffect(() => {
     // Check authentication
@@ -36,168 +43,253 @@ export default function DashboardPage() {
     // Load data based on role
     (async () => {
       try {
+        setLoading(true);
+        setError(null);
         const [m, r] = await Promise.all([getMetrics(), getRecentComplaints(25)]);
         setMetrics(m);
-        setRows(r);
+        setRecent(Array.isArray(r) ? r : []);
+        if (currentUser.role === "worker" || currentUser.role === "supervisor" || currentUser.role === "admin") {
+          try {
+            const wd = await getWorkerDashboard();
+            setWorker(wd);
+          } catch {
+            setWorker(null);
+          }
+        }
       } catch (error) {
-        console.error("Failed to load dashboard data", error);
+        setError("Failed to load dashboard data. Please refresh and try again.");
+      }
+      finally {
+        setLoading(false);
       }
     })();
   }, [router]);
 
+  const chartData = useMemo(() => {
+    // Simple trend proxy using recent timestamps (keeps UI responsive and local)
+    // Replace with a real aggregated endpoint later.
+    const buckets = new Map<string, number>();
+    for (const r of recent) {
+      const d = r.timestamp ? new Date(r.timestamp) : null;
+      if (!d || Number.isNaN(d.getTime())) continue;
+      const key = d.toLocaleDateString("en-MY", { month: "short", day: "2-digit" });
+      buckets.set(key, (buckets.get(key) ?? 0) + 1);
+    }
+    return Array.from(buckets.entries())
+      .map(([date, count]) => ({ date, count }))
+      .slice(-14);
+  }, [recent]);
+
   if (!user) {
-    return <div className="text-center py-10">Loading...</div>;
+    return <div className="text-center py-10 text-sm text-slate-600">Loading…</div>;
   }
 
-  // Admin Dashboard
-  if (user.role === "admin") {
-    return (
-      <div className="space-y-6">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-          <p className="text-gray-600">System overview and management</p>
-        </div>
+  const kpi = {
+    today: metrics?.total_complaints_today ?? null,
+    pending: metrics?.pending_cases ?? null,
+    autoResolved: metrics?.auto_resolved_pct ?? null
+  };
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <KPIcard title="Total Complaints" value={metrics ? String(metrics.total_complaints_today) : "—"} tone="info" />
-          <KPIcard title="Pending Cases" value={metrics ? String(metrics.pending_cases) : "—"} tone="warn" />
-          <KPIcard title="In Progress" value={metrics ? String(metrics.in_progress_cases ?? 0) : "—"} tone="info" />
-          <KPIcard title="Completed" value={metrics ? String(metrics.completed_cases ?? 0) : "—"} tone="good" />
-        </div>
-
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h2 className="text-lg font-semibold text-blue-900 mb-2">Quick Actions</h2>
-          <div className="flex gap-2">
-            <button
-              onClick={() => router.push("/admin/users")}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Manage Users
-            </button>
-            <button
-              onClick={() => router.push("/admin/analytics")}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              View Analytics
-            </button>
-          </div>
-        </div>
-
-        <ComplaintTable rows={rows} query={query} onQueryChange={setQuery} />
-      </div>
-    );
-  }
-
-  // Staff Dashboard
-  if (user.role === "worker") {
-    return (
-      <div className="space-y-6">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold">Staff Dashboard</h1>
-          <p className="text-gray-600">Your assigned work orders and tasks</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <KPIcard title="Assigned to Me" value={metrics ? String(metrics.assigned_to_me) : "—"} tone="info" />
-          <KPIcard title="Pending in Agency" value={metrics ? String(metrics.pending_in_agency) : "—"} tone="warn" />
-          <KPIcard title="Completed by Me" value={metrics ? String(metrics.completed_by_me) : "—"} tone="good" />
-        </div>
-
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h2 className="text-lg font-semibold text-blue-900 mb-2">Quick Links</h2>
-          <div className="flex gap-2">
-            <button
-              onClick={() => router.push("/work-orders")}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              View Work Orders
-            </button>
-            <button
-              onClick={() => router.push("/submit")}
-              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-            >
-              Submit Complaint
-            </button>
-          </div>
-        </div>
-
-        <ComplaintTable rows={rows} query={query} onQueryChange={setQuery} />
-      </div>
-    );
-  }
-
-  // Supervisor Dashboard
-  if (user.role === "supervisor") {
-    return (
-      <div className="space-y-6">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold">Supervisor Dashboard</h1>
-          <p className="text-gray-600">Manage work orders and team performance</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <KPIcard title="Pending" value={metrics ? String(metrics.pending_cases) : "—"} tone="warn" />
-          <KPIcard title="In Progress" value={metrics ? String(metrics.in_progress_cases ?? 0) : "—"} tone="info" />
-          <KPIcard title="Completed" value={metrics ? String(metrics.completed_cases ?? 0) : "—"} tone="good" />
-          <KPIcard title="Response Time" value={metrics?.avg_response_time_minutes ? `${metrics.avg_response_time_minutes}m` : "—"} />
-        </div>
-
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h2 className="text-lg font-semibold text-blue-900 mb-2">Management Tools</h2>
-          <div className="flex gap-2">
-            <button
-              onClick={() => router.push("/work-orders")}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Assign Work Orders
-            </button>
-            <button
-              onClick={() => router.push("/logs")}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              View Logs
-            </button>
-          </div>
-        </div>
-
-        <ComplaintTable rows={rows} query={query} onQueryChange={setQuery} />
-      </div>
-    );
-  }
-
-  // Public Dashboard
   return (
-    <div className="space-y-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">Public Dashboard</h1>
-        <p className="text-gray-600">Submit a complaint or check the status of an existing one</p>
+    <div className="space-y-4">
+      <PageHeader
+        title="Dashboard"
+        description={
+          user.role === "public"
+            ? "Submit a complaint or track an existing case."
+            : "Operational overview for complaint routing and handling."
+        }
+        actions={
+          user.role === "public" ? (
+            <>
+              <Button onClick={() => router.push("/submit")}>Submit Complaint</Button>
+              <Button variant="outline" onClick={() => router.push("/status")}>
+                Track Status
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="outline" onClick={() => router.push("/complaints")}>
+                Complaint List
+              </Button>
+              <Button onClick={() => router.push("/work-orders")}>Work Orders</Button>
+            </>
+          )
+        }
+      />
+
+      {error ? <Alert tone="danger" title="Unable to load">{error}</Alert> : null}
+
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <CardKPI
+          label="Complaints (Today)"
+          value={loading ? <Skeleton className="h-7 w-20" /> : kpi.today ?? "—"}
+          hint="All submissions received today"
+        />
+        <CardKPI
+          label="Pending Cases"
+          value={loading ? <Skeleton className="h-7 w-20" /> : kpi.pending ?? "—"}
+          hint="Not yet completed"
+        />
+        <CardKPI
+          label="Auto-Resolved %"
+          value={loading ? <Skeleton className="h-7 w-24" /> : kpi.autoResolved != null ? `${kpi.autoResolved}%` : "—"}
+          hint="Prototype metric"
+        />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-green-900 mb-4">Submit a Complaint</h2>
-          <p className="text-gray-600 mb-4">Report an issue to the appropriate government agency</p>
-          <button
-            onClick={() => router.push("/submit")}
-            className="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-          >
-            New Complaint
-          </button>
+      {(user.role === "worker" || user.role === "supervisor" || user.role === "admin") ? (
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+          <CardKPI
+            label="Assigned to me"
+            value={loading ? <Skeleton className="h-7 w-16" /> : worker?.assigned_to_me ?? "—"}
+          />
+          <CardKPI
+            label="Pending in agency"
+            value={loading ? <Skeleton className="h-7 w-16" /> : worker?.pending_in_agency ?? "—"}
+          />
+          <CardKPI
+            label="Completed by me"
+            value={loading ? <Skeleton className="h-7 w-16" /> : worker?.completed_by_me ?? "—"}
+          />
         </div>
+      ) : null}
 
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-blue-900 mb-4">Track Status</h2>
-          <p className="text-gray-600 mb-4">Check the status of your complaint</p>
-          <button
-            onClick={() => router.push("/status")}
-            className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Track Complaint
-          </button>
-        </div>
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <CardHeader className="flex items-center justify-between">
+            <div>
+              <CardTitle>Complaint Trend (Recent)</CardTitle>
+              <div className="mt-1 text-sm text-slate-600">Quick view based on recent activity.</div>
+            </div>
+            <Badge tone={active.tone}>{active.label}</Badge>
+          </CardHeader>
+          <CardBody>
+            {loading ? (
+              <Skeleton className="h-56 w-full" />
+            ) : chartData.length === 0 ? (
+              <div className="text-sm text-slate-600">No recent activity yet.</div>
+            ) : (
+              <div className="h-56">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="govFill" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#06B6D4" stopOpacity={0.25} />
+                        <stop offset="95%" stopColor="#06B6D4" stopOpacity={0.02} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+                    <XAxis dataKey="date" tick={{ fontSize: 12 }} stroke="#64748B" />
+                    <YAxis tick={{ fontSize: 12 }} stroke="#64748B" allowDecimals={false} />
+                    <Tooltip />
+                    <Area type="monotone" dataKey="count" stroke="#06B6D4" fill="url(#govFill)" strokeWidth={2} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </CardBody>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+          </CardHeader>
+          <CardBody className="space-y-2">
+            <Button className="w-full" onClick={() => router.push("/submit")}>
+              Submit Complaint
+            </Button>
+            <Button className="w-full" variant="outline" onClick={() => router.push("/complaints")}>
+              View Complaint List
+            </Button>
+            <Button className="w-full" variant="outline" onClick={() => router.push("/logs")}>
+              View Audit Logs
+            </Button>
+            {user.role === "admin" ? (
+              <>
+                <Button className="w-full" variant="secondary" onClick={() => router.push("/admin/users")}>
+                  User Management
+                </Button>
+                <Button className="w-full" variant="secondary" onClick={() => router.push("/admin/settings")}>
+                  Admin Settings
+                </Button>
+              </>
+            ) : null}
+          </CardBody>
+        </Card>
       </div>
 
-      <ComplaintTable rows={rows} query={query} onQueryChange={setQuery} />
+      <Card>
+        <CardHeader className="flex items-center justify-between">
+          <CardTitle>Recent Complaints</CardTitle>
+          <Link className="text-sm text-cyan-800 underline underline-offset-4" href="/complaints">
+            View all
+          </Link>
+        </CardHeader>
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead className="bg-slate-50 text-slate-700">
+              <tr className="border-b border-slate-200">
+                <th className="px-5 py-3 text-left font-semibold">Complaint ID</th>
+                <th className="px-5 py-3 text-left font-semibold">Category</th>
+                <th className="px-5 py-3 text-left font-semibold">Agency</th>
+                <th className="px-5 py-3 text-left font-semibold">Status</th>
+                <th className="px-5 py-3 text-left font-semibold">Timestamp</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {loading ? (
+                Array.from({ length: 6 }).map((_, i) => (
+                  <tr key={i}>
+                    <td className="px-5 py-3">
+                      <Skeleton className="h-4 w-40" />
+                    </td>
+                    <td className="px-5 py-3">
+                      <Skeleton className="h-4 w-24" />
+                    </td>
+                    <td className="px-5 py-3">
+                      <Skeleton className="h-4 w-24" />
+                    </td>
+                    <td className="px-5 py-3">
+                      <Skeleton className="h-4 w-20" />
+                    </td>
+                    <td className="px-5 py-3">
+                      <Skeleton className="h-4 w-28" />
+                    </td>
+                  </tr>
+                ))
+              ) : recent.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-5 py-10 text-center text-slate-600">
+                    No complaints yet.
+                  </td>
+                </tr>
+              ) : (
+                recent.map((r) => (
+                  <tr key={r.id} className="hover:bg-slate-50">
+                    <td className="px-5 py-3">
+                      <Link
+                        href={`/complaints/${encodeURIComponent(r.id)}`}
+                        className="font-mono text-xs text-slate-900 underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500"
+                      >
+                        {r.id}
+                      </Link>
+                    </td>
+                    <td className="px-5 py-3">{r.category ?? "—"}</td>
+                    <td className="px-5 py-3">{r.agency ?? "—"}</td>
+                    <td className="px-5 py-3">
+                      <Badge tone={(r.status || "").toUpperCase() === "COMPLETED" ? "good" : "neutral"}>{r.status}</Badge>
+                    </td>
+                    <td className="px-5 py-3 text-slate-700">{r.timestamp ? new Date(r.timestamp).toLocaleString() : "—"}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      <SmartInsightsPanel />
     </div>
   );
 }

@@ -28,7 +28,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run dev',
+    command: 'set E2E_BYPASS_AUTH=1&& set NEXT_PUBLIC_API_BASE_URL=http://localhost:8000&& npm run dev',
     port: 3000,
     reuseExistingServer: !process.env.CI,
   },

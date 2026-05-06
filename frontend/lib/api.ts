@@ -143,3 +143,98 @@ export async function completeWorkOrder(workOrderId: string) {
   return r.json();
 }
 
+// --- Lifecycle (strict complaint workflow) ---
+export type ComplaintV2 = {
+  id: string;
+  title?: string | null;
+  description: string;
+  category?: string | null;
+  priority?: string | null;
+  status: string;
+  assigned_to?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  assigned_at?: string | null;
+  accepted_at?: string | null;
+  started_at?: string | null;
+  resolved_at?: string | null;
+  closed_at?: string | null;
+  deadline_at?: string | null;
+  escalated_at?: string | null;
+  escalation_reason?: string | null;
+};
+
+export type ActionLogV2 = {
+  id: string;
+  complaint_id: string;
+  action_type: string;
+  user_id?: string | null;
+  payload?: any;
+  timestamp: string;
+};
+
+export async function getComplaintV2(id: string): Promise<ComplaintV2> {
+  const r = await fetch(`${baseUrl}/complaints/${encodeURIComponent(id)}`, { cache: "no-store" });
+  if (!r.ok) throw new Error(await getErrorMessage(r));
+  return r.json();
+}
+
+export async function getComplaintActions(id: string): Promise<ActionLogV2[]> {
+  const r = await fetch(`${baseUrl}/complaints/${encodeURIComponent(id)}/actions`, { cache: "no-store" });
+  if (!r.ok) throw new Error(await getErrorMessage(r));
+  return r.json();
+}
+
+export async function acceptComplaint(id: string): Promise<ComplaintV2> {
+  const r = await fetch(`${baseUrl}/complaints/${encodeURIComponent(id)}/accept`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    cache: "no-store"
+  });
+  if (!r.ok) throw new Error(await getErrorMessage(r));
+  return r.json();
+}
+
+export async function startComplaint(id: string): Promise<ComplaintV2> {
+  const r = await fetch(`${baseUrl}/complaints/${encodeURIComponent(id)}/start`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    cache: "no-store"
+  });
+  if (!r.ok) throw new Error(await getErrorMessage(r));
+  return r.json();
+}
+
+export async function resolveComplaint(id: string, proof_url?: string | null): Promise<ComplaintV2> {
+  const r = await fetch(`${baseUrl}/complaints/${encodeURIComponent(id)}/resolve`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ proof_url: proof_url || null }),
+    cache: "no-store"
+  });
+  if (!r.ok) throw new Error(await getErrorMessage(r));
+  return r.json();
+}
+
+export async function confirmComplaint(id: string, email?: string | null): Promise<ComplaintV2> {
+  const r = await fetch(`${baseUrl}/complaints/${encodeURIComponent(id)}/confirm`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: email || null }),
+    cache: "no-store"
+  });
+  if (!r.ok) throw new Error(await getErrorMessage(r));
+  return r.json();
+}
+
+export async function rejectComplaint(id: string, email?: string | null, reason?: string | null): Promise<ComplaintV2> {
+  const r = await fetch(`${baseUrl}/complaints/${encodeURIComponent(id)}/reject`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: email || null, reason: reason || null }),
+    cache: "no-store"
+  });
+  if (!r.ok) throw new Error(await getErrorMessage(r));
+  return r.json();
+}
+

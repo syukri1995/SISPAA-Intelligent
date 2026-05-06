@@ -17,7 +17,6 @@ A production-ready prototype for intelligent complaint routing and work order ma
 - [Quick Start](#quick-start)
 - [Local Development](#local-development)
 - [Project Structure](#project-structure)
-- [Deployment](#deployment)
 - [Database Schema](#database-schema)
 - [Contributing](#contributing)
 
@@ -162,7 +161,6 @@ User Complaint
 
 ### DevOps
 - **Docker & Docker Compose** - Containerization (optional)
-- **Railway** - Cloud deployment platform
 - **Python 3.13** - Backend runtime
 - **Node.js 18+** - Frontend runtime
 
@@ -462,7 +460,6 @@ psql -U postgres -d sispaa_router -f backend/schema.sql
 ├── docker-compose.yml          # Optional: PostgreSQL + Redis
 ├── README.md                   # This file
 ├── LOCAL_SETUP.md              # Non-Docker setup guide
-├── RAILWAY.md                  # Cloud deployment guide
 ├── .gitignore
 └── .env.example (root)
 ```
@@ -536,16 +533,6 @@ created_at TIMESTAMPTZ DEFAULT NOW()
 
 ## 🚢 Deployment
 
-### Railway (Recommended)
-See [RAILWAY.md](./RAILWAY.md) for step-by-step cloud deployment.
-
-**Key Steps:**
-1. Create Railway project
-2. Add PostgreSQL plugin
-3. Deploy backend service (root: `backend`)
-4. Deploy frontend service (root: `frontend`)
-5. Set environment variables in Railway dashboard
-
 ### Docker
 ```bash
 docker compose up -d
@@ -613,7 +600,7 @@ This project is licensed under the MIT License. See LICENSE file for details.
 
 - **Issues**: GitHub Issues
 - **Email**: syukridinup@gmail.com
-- **Documentation**: See LOCAL_SETUP.md and RAILWAY.md
+- **Documentation**: See LOCAL_SETUP.md
 
 ---
 

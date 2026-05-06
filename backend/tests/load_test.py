@@ -12,7 +12,7 @@ async def submit_single_complaint(client: httpx.AsyncClient, i: int):
     }
     start = time.time()
     try:
-        resp = await client.post(f"{API_URL}/api/complaint", json=payload, timeout=30.0)
+        resp = await client.post(f"{API_URL}/complaint", json=payload, timeout=30.0)
         return resp.status_code, time.time() - start
     except Exception as e:
         return str(e), time.time() - start

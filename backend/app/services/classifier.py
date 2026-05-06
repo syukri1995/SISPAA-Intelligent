@@ -29,6 +29,17 @@ def _heuristic_classify(text: str) -> ClassificationResult:
             raw={"mode": "heuristic"},
         )
 
+    # Transport scams / fare disputes
+    if any(k in t for k in ["taxi", "teksi", "grab"]) and any(
+        k in t for k in ["scam", "ripoff", "overcharge", "tanpa meter", "without meter", "asked for rm"]
+    ):
+        return ClassificationResult(
+            category="Public Transport Issue",
+            agency="APAD",
+            confidence=0.72,
+            raw={"mode": "heuristic"},
+        )
+
     if any(k in t for k in ["clinic", "hospital", "doctor", "medicine", "appointment", "kkm", "healthcare"]):
         return ClassificationResult(
             category="Healthcare Service",
@@ -70,9 +81,6 @@ async def classify_complaint(text: str) -> ClassificationResult:
         return _heuristic_classify(text)
 
     try:
-        # Lazy import to keep local installs simple.
-        from groq import AsyncGroq  # type: ignore
-
         client = AsyncGroq(api_key=settings.groq_api_key)
 
         system = (
@@ -117,4 +125,12 @@ async def classify_complaint(text: str) -> ClassificationResult:
             confidence=fallback.confidence,
             raw={"mode": "heuristic-fallback", "error": str(exc)},
         )
+
+
+# Exported for test patching (tests patch app.services.classifier.AsyncGroq).
+# Keep this import at module load so patching works reliably.
+try:
+    from groq import AsyncGroq  # type: ignore
+except Exception:  # pragma: no cover
+    AsyncGroq = None  # type: ignore
 
