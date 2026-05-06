@@ -66,7 +66,12 @@ export default function ComplaintDetailPage() {
 
   // officer resolve proof
   const [proofUrl, setProofUrl] = useState("");
-  const user = getCurrentUser();
+  // Must be in state/effect — not called at render time — to prevent hydration mismatch.
+  const [user, setUser] = useState<ReturnType<typeof getCurrentUser>>(null);
+
+  useEffect(() => {
+    setUser(getCurrentUser());
+  }, []);
 
   useEffect(() => {
     if (!id) return;

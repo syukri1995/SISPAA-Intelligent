@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.api.routes import router
 from app.api.auth_routes import router as auth_router
@@ -12,8 +13,6 @@ from app.core.config import settings
 from app.db.init_db import init_db
 from app.workers.lifecycle_jobs import start_lifecycle_jobs
 from app.core.rate_limit import SimpleRateLimiter
-from starlette.requests import Request
-from starlette.responses import JSONResponse
 
 
 app = FastAPI(title=settings.app_name)
@@ -47,8 +46,30 @@ async def _rate_limit(request: Request, call_next):
     return await call_next(request)
 
 
+def _cors_headers(request: Request) -> dict:
+    """Build CORS headers for error responses so the browser sees the real status."""
+    origin = request.headers.get("origin", "")
+    allowed = settings.cors_origins_list
+    if origin in allowed or "*" in allowed:
+        return {
+            "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Credentials": "true",
+        }
+    return {}
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
+    """Re-attach CORS headers on HTTP error responses (401, 403, etc.)."""
+    headers = {**_cors_headers(request), **(exc.headers or {})}
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
+        headers=headers,
+    )
+
+
 @app.on_event("startup")
 async def _startup() -> None:
     await init_db()
     start_lifecycle_jobs()
-

@@ -26,7 +26,7 @@ function clamp(n: number, min: number, max: number) {
 
 export default function AdminSettingsPage() {
   const router = useRouter();
-  const [user, setUser] = useState(getCurrentUser());
+  const [user, setUser] = useState<ReturnType<typeof getCurrentUser>>(null);
   const [saved, setSaved] = useState<"idle" | "saved" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
 

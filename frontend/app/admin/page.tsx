@@ -7,7 +7,7 @@ import { getCurrentUser } from "@/lib/auth";
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const [user, setUser] = useState(getCurrentUser());
+  const [user, setUser] = useState<ReturnType<typeof getCurrentUser>>(null);
   const [stats, setStats] = useState<any>(null);
 
   useEffect(() => {

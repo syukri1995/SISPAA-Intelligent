@@ -18,6 +18,8 @@ pip install -r requirements.txt
 ```bash
 cd backend
 python -m uvicorn app.main:app --reload --port 8002
+or
+.venv\Scripts\python.exe -m uvicorn app.main:app --host 0.0.0.0 --port 8002 --reload
 ```
 
 If you use a different port, update the frontend/backend URLs in the test steps accordingly.

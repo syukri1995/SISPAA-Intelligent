@@ -8,7 +8,7 @@ import { baseUrl } from "@/lib/api";
 
 export default function AdminAnalytics() {
   const router = useRouter();
-  const [user, setUser] = useState(getCurrentUser());
+  const [user, setUser] = useState<ReturnType<typeof getCurrentUser>>(null);
   const [analytics, setAnalytics] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 

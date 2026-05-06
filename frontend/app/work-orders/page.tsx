@@ -14,7 +14,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 
 export default function WorkOrdersPage() {
   const router = useRouter();
-  const [user, setUser] = useState(getCurrentUser());
+  const [user, setUser] = useState<ReturnType<typeof getCurrentUser>>(null);
   const [tab, setTab] = useState<"my" | "pending">("my");
 
   const [loading, setLoading] = useState(true);

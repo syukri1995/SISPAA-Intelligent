@@ -18,7 +18,7 @@ interface User {
 
 export default function UserManagement() {
   const router = useRouter();
-  const [user, setUser] = useState(getCurrentUser());
+  const [user, setUser] = useState<ReturnType<typeof getCurrentUser>>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

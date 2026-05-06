@@ -16,7 +16,8 @@ import { SmartInsightsPanel } from "@/components/SmartInsightsPanel";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [user, setUser] = useState(getCurrentUser());
+  // Start as null so SSR and first client render are identical (avoids hydration mismatch).
+  const [user, setUser] = useState<ReturnType<typeof getCurrentUser>>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [metrics, setMetrics] = useState<any>(null);
@@ -80,6 +81,8 @@ export default function DashboardPage() {
       .slice(-14);
   }, [recent]);
 
+  // Suppress rendering until the client has read auth state from localStorage.
+  // This ensures SSR output == first client render, preventing hydration errors.
   if (!user) {
     return <div className="text-center py-10 text-sm text-slate-600">Loading…</div>;
   }
