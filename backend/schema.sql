@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS complaints (
   complaint_text TEXT NOT NULL,
   location_text TEXT NULL,
   image_url TEXT NULL,
+  email VARCHAR(255) NULL,
   status VARCHAR(32) NOT NULL DEFAULT 'RECEIVED',
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -28,6 +29,10 @@ CREATE TABLE IF NOT EXISTS work_orders (
   priority VARCHAR(16) NOT NULL,
   description TEXT NOT NULL,
   status VARCHAR(32) NOT NULL DEFAULT 'CREATED',
+  assigned_to CHAR(36) NULL,
+  assigned_by CHAR(36) NULL,
+  assigned_at TIMESTAMP NULL,
+  completed_at TIMESTAMP NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_work_orders_complaint FOREIGN KEY (complaint_id) REFERENCES complaints(id) ON DELETE CASCADE
 );

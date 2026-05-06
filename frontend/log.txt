@@ -1,0 +1,140 @@
+
+Running 8 tests using 4 workers
+
+[1A[2K[1/8] [chromium] › tests\e2e\submit.spec.ts:41:3 › Submit Complaint Flow › handles very short text with warning
+[1A[2K[2/8] [chromium] › tests\e2e\submit.spec.ts:8:3 › Submit Complaint Flow › form validation errors on empty submission
+[1A[2K[3/8] [chromium] › tests\e2e\submit.spec.ts:14:3 › Submit Complaint Flow › mixed language complaint processing to DBKL
+[1A[2K[4/8] [chromium] › tests\e2e\submit.spec.ts:50:3 › Submit Complaint Flow › handles backend error gracefully
+[1A[2K  1) [chromium] › tests\e2e\submit.spec.ts:41:3 › Submit Complaint Flow › handles very short text with warning 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\syukr\AppData\Local\ms-playwright\chromium_headless_shell-1217\chrome-headless-shell-win64\chrome-headless-shell.exe
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results\submit-Submit-Complaint-Fl-7b283-ery-short-text-with-warning-chromium\error-context.md
+
+
+[1A[2K  2) [chromium] › tests\e2e\submit.spec.ts:8:3 › Submit Complaint Flow › form validation errors on empty submission 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\syukr\AppData\Local\ms-playwright\chromium_headless_shell-1217\chrome-headless-shell-win64\chrome-headless-shell.exe
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results\submit-Submit-Complaint-Fl-a93e2--errors-on-empty-submission-chromium\error-context.md
+
+
+[1A[2K  3) [chromium] › tests\e2e\submit.spec.ts:14:3 › Submit Complaint Flow › mixed language complaint processing to DBKL 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\syukr\AppData\Local\ms-playwright\chromium_headless_shell-1217\chrome-headless-shell-win64\chrome-headless-shell.exe
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results\submit-Submit-Complaint-Fl-f9f94-omplaint-processing-to-DBKL-chromium\error-context.md
+
+
+[1A[2K  4) [chromium] › tests\e2e\submit.spec.ts:50:3 › Submit Complaint Flow › handles backend error gracefully 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\syukr\AppData\Local\ms-playwright\chromium_headless_shell-1217\chrome-headless-shell-win64\chrome-headless-shell.exe
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results\submit-Submit-Complaint-Fl-035c6-es-backend-error-gracefully-chromium\error-context.md
+
+
+[1A[2K[5/8] [Mobile Chrome] › tests\e2e\submit.spec.ts:8:3 › Submit Complaint Flow › form validation errors on empty submission
+[1A[2K[6/8] [Mobile Chrome] › tests\e2e\submit.spec.ts:14:3 › Submit Complaint Flow › mixed language complaint processing to DBKL
+[1A[2K[7/8] [Mobile Chrome] › tests\e2e\submit.spec.ts:41:3 › Submit Complaint Flow › handles very short text with warning
+[1A[2K[8/8] [Mobile Chrome] › tests\e2e\submit.spec.ts:50:3 › Submit Complaint Flow › handles backend error gracefully
+[1A[2K  5) [Mobile Chrome] › tests\e2e\submit.spec.ts:41:3 › Submit Complaint Flow › handles very short text with warning 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\syukr\AppData\Local\ms-playwright\chromium_headless_shell-1217\chrome-headless-shell-win64\chrome-headless-shell.exe
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results\submit-Submit-Complaint-Fl-7b283-ery-short-text-with-warning-Mobile-Chrome\error-context.md
+
+
+[1A[2K  6) [Mobile Chrome] › tests\e2e\submit.spec.ts:8:3 › Submit Complaint Flow › form validation errors on empty submission 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\syukr\AppData\Local\ms-playwright\chromium_headless_shell-1217\chrome-headless-shell-win64\chrome-headless-shell.exe
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results\submit-Submit-Complaint-Fl-a93e2--errors-on-empty-submission-Mobile-Chrome\error-context.md
+
+
+[1A[2K  7) [Mobile Chrome] › tests\e2e\submit.spec.ts:14:3 › Submit Complaint Flow › mixed language complaint processing to DBKL 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\syukr\AppData\Local\ms-playwright\chromium_headless_shell-1217\chrome-headless-shell-win64\chrome-headless-shell.exe
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results\submit-Submit-Complaint-Fl-f9f94-omplaint-processing-to-DBKL-Mobile-Chrome\error-context.md
+
+
+[1A[2K  8) [Mobile Chrome] › tests\e2e\submit.spec.ts:50:3 › Submit Complaint Flow › handles backend error gracefully 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\syukr\AppData\Local\ms-playwright\chromium_headless_shell-1217\chrome-headless-shell-win64\chrome-headless-shell.exe
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results\submit-Submit-Complaint-Fl-035c6-es-backend-error-gracefully-Mobile-Chrome\error-context.md
+
+
+[1A[2K  8 failed
+    [chromium] › tests\e2e\submit.spec.ts:8:3 › Submit Complaint Flow › form validation errors on empty submission 
+    [chromium] › tests\e2e\submit.spec.ts:14:3 › Submit Complaint Flow › mixed language complaint processing to DBKL 
+    [chromium] › tests\e2e\submit.spec.ts:41:3 › Submit Complaint Flow › handles very short text with warning 
+    [chromium] › tests\e2e\submit.spec.ts:50:3 › Submit Complaint Flow › handles backend error gracefully 
+    [Mobile Chrome] › tests\e2e\submit.spec.ts:8:3 › Submit Complaint Flow › form validation errors on empty submission 
+    [Mobile Chrome] › tests\e2e\submit.spec.ts:14:3 › Submit Complaint Flow › mixed language complaint processing to DBKL 
+    [Mobile Chrome] › tests\e2e\submit.spec.ts:41:3 › Submit Complaint Flow › handles very short text with warning 
+    [Mobile Chrome] › tests\e2e\submit.spec.ts:50:3 › Submit Complaint Flow › handles backend error gracefully 

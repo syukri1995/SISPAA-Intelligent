@@ -58,6 +58,10 @@ GROQ_API_KEY=
 ```
 
 Replace `YOUR_PASSWORD` with your PostgreSQL superuser password.
+If you previously set `DATABASE_URL` in your PowerShell environment, clear it so `backend/.env` takes effect:
+```powershell
+Remove-Item Env:\DATABASE_URL -ErrorAction SilentlyContinue
+```
 
 ### Start Backend
 ```powershell

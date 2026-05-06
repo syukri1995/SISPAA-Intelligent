@@ -1,6 +1,6 @@
 import { cn } from "@/lib/cn";
 
-export function KPIcard(props: { title: string; value: string; sub?: string; tone?: "good" | "warn" | "info" }) {
+export function KPIcard(props: { title: string; value: string | number; sub?: string; tone?: "good" | "warn" | "info" }) {
   const tone =
     props.tone === "good"
       ? "border-emerald-200 bg-emerald-50 text-emerald-900"

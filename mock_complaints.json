@@ -1,0 +1,50 @@
+[
+    {
+        "complaint_text": "Pothole on Jalan Ampang near KLCC is very deep.",
+        "location_text": "Jalan Ampang, Kuala Lumpur",
+        "email": "citizen1@example.com",
+        "expected_category": "Infrastructure Damage",
+        "expected_agency": "DBKL",
+        "expected_priority": "MEDIUM"
+    },
+    {
+        "complaint_text": "LRT Kelana Jaya line is delayed by 40 minutes, causing a huge crowd.",
+        "location_text": "KL Sentral",
+        "email": "commuter22@example.com",
+        "expected_category": "Public Transport Issue",
+        "expected_agency": "APAD",
+        "expected_priority": "MEDIUM"
+    },
+    {
+        "complaint_text": "Accident outside the hospital, people are bleeding and need urgent help!",
+        "location_text": "Hospital Kuala Lumpur",
+        "email": "emergency.reporter@example.com",
+        "expected_category": "Healthcare Service",
+        "expected_agency": "KKM",
+        "expected_priority": "HIGH"
+    },
+    {
+        "complaint_text": "The public toilet at the park is extremely dirty and has no water.",
+        "location_text": "Taman Tasik Titiwangsa",
+        "email": "parkgoer@example.com",
+        "expected_category": "Public Facilities",
+        "expected_agency": "DBKL",
+        "expected_priority": "LOW"
+    },
+    {
+        "complaint_text": "Taxi scam from Singapore border, driver asked for RM200 without meter.",
+        "location_text": "Johor Bahru CIQ",
+        "email": "tourist99@example.com",
+        "expected_category": "Public Transport Issue",
+        "expected_agency": "APAD",
+        "expected_priority": "MEDIUM"
+    },
+    {
+        "complaint_text": "Jalan rosak teruk dekat area perumahan saya, dah 3 bulan tak repair.",
+        "location_text": "Shah Alam",
+        "email": "penduduk@example.com",
+        "expected_category": "Infrastructure Damage",
+        "expected_agency": "DBKL",
+        "expected_priority": "MEDIUM"
+    }
+]

@@ -1,0 +1,3 @@
+SyntaxError: Invalid regular expression: /warning\/gi: \ at end of pattern
+
+[1A[2K

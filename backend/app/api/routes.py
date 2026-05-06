@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import Classification, Complaint, WorkOrder
 from app.db.session import get_session
 from app.langgraph.graph import router_graph
+from app.langgraph.state import RouterState
 from app.schemas.complaint import ComplaintCreate, ComplaintStatus
 from app.schemas.logs import AuditLogOut
 from app.services.agency_router import simulate_agency_work_order_post
@@ -22,115 +23,132 @@ async def healthz():
 
 @router.post("/complaint", response_model=ComplaintStatus)
 async def submit_complaint(payload: ComplaintCreate, session: AsyncSession = Depends(get_session)):
-    complaint = Complaint(
-        complaint_text=payload.complaint_text,
-        location_text=payload.location_text,
-        image_url=payload.image_url,
-        status="RECEIVED",
-    )
-    session.add(complaint)
-    await session.commit()
-    await session.refresh(complaint)
+    try:
+        complaint = Complaint(
+            complaint_text=payload.complaint_text,
+            location_text=payload.location_text,
+            image_url=payload.image_url,
+            email=payload.email,
+            status="RECEIVED",
+        )
+        session.add(complaint)
+        await session.commit()
+        await session.refresh(complaint)
 
-    complaint_id = str(complaint.id)
-    await audit(session, complaint_id=complaint_id, event_type="COMPLAINT_RECEIVED", message="Complaint received")
+        complaint_id = str(complaint.id)
+        await audit(session, complaint_id=complaint_id, event_type="COMPLAINT_RECEIVED", message="Complaint received")
 
-    # Run LangGraph workflow (Sense → Reason (retry) → Act).
-    state_in = {
-        "complaint_id": complaint_id,
-        "complaint_text": complaint.complaint_text,
-        "location_text": complaint.location_text,
-        "image_url": complaint.image_url,
-        "retry_count": 0,
-    }
-    state_out = await router_graph.ainvoke(state_in)
+        # Run LangGraph workflow (Sense → Reason (retry) → Act).
+        state_in: RouterState = {
+            "complaint_id": complaint_id,
+            "complaint_text": complaint.complaint_text,
+            "location_text": complaint.location_text,
+            "image_url": complaint.image_url,
+            "retry_count": 0,
+        }
+        state_out = await router_graph.ainvoke(state_in)
 
-    await audit(
-        session,
-        complaint_id=complaint_id,
-        event_type="SENSE_COMPLETED",
-        message="Sense node completed",
-        payload={"metadata": state_out.get("metadata", {})},
-    )
-    await audit(
-        session,
-        complaint_id=complaint_id,
-        event_type="REASON_COMPLETED",
-        message="Reason node completed",
-        payload={
-            "category": state_out.get("category"),
-            "agency": state_out.get("agency"),
-            "confidence": state_out.get("confidence"),
-            "retries": state_out.get("retry_count"),
-        },
-    )
+        await audit(
+            session,
+            complaint_id=complaint_id,
+            event_type="SENSE_COMPLETED",
+            message="Sense node completed",
+            payload={"metadata": state_out.get("metadata", {})},
+        )
+        await audit(
+            session,
+            complaint_id=complaint_id,
+            event_type="REASON_COMPLETED",
+            message="Reason node completed",
+            payload={
+                "category": state_out.get("category"),
+                "agency": state_out.get("agency"),
+                "confidence": state_out.get("confidence"),
+                "retries": state_out.get("retry_count"),
+            },
+        )
 
-    # Persist classification
-    classification = Classification(
-        complaint_id=complaint.id,
-        category=str(state_out.get("category", "Other")),
-        agency=str(state_out.get("agency", "OTHER")),
-        confidence=float(state_out.get("confidence", 0.0)),
-        raw_json={
-            "category": state_out.get("category"),
-            "agency": state_out.get("agency"),
-            "confidence": state_out.get("confidence"),
-            "metadata": state_out.get("metadata", {}),
-        },
-    )
-    session.add(classification)
+        # Persist classification
+        classification = Classification(
+            complaint_id=complaint.id,
+            category=str(state_out.get("category", "Other")),
+            agency=str(state_out.get("agency", "OTHER")),
+            confidence=float(state_out.get("confidence", 0.0)),
+            raw_json={
+                "category": state_out.get("category"),
+                "agency": state_out.get("agency"),
+                "confidence": state_out.get("confidence"),
+                "metadata": state_out.get("metadata", {}),
+            },
+        )
+        session.add(classification)
 
-    # Persist work order
-    work_order = WorkOrder(
-        id=str(state_out.get("work_order_id")),
-        complaint_id=complaint.id,
-        agency=str(state_out.get("agency", "OTHER")),
-        priority=str(state_out.get("priority", "LOW")),
-        description=str(state_out.get("work_order_description", "")),
-        status="CREATED",
-    )
-    session.add(work_order)
+        # Persist work order
+        work_order = WorkOrder(
+            id=str(state_out.get("work_order_id")),
+            complaint_id=complaint.id,
+            agency=str(state_out.get("agency", "OTHER")),
+            priority=str(state_out.get("priority", "LOW")),
+            description=str(state_out.get("work_order_description", "")),
+            status="CREATED",
+        )
+        session.add(work_order)
 
-    complaint.status = "COMPLETED"
-    await session.commit()
+        complaint.status = "COMPLETED"
+        await session.commit()
+        await session.refresh(complaint)
 
-    await audit(
-        session,
-        complaint_id=complaint_id,
-        event_type="ACT_COMPLETED",
-        message="Act node completed",
-        payload={
-            "work_order_id": str(work_order.id),
-            "priority": work_order.priority,
-            "email_preview": state_out.get("citizen_email_preview"),
-        },
-    )
+        complaint_created_at = complaint.created_at.isoformat() if complaint.created_at else None
+        complaint_updated_at = complaint.updated_at.isoformat() if complaint.updated_at else None
+        complaint_email = complaint.email
+        complaint_text = complaint.complaint_text
+        complaint_location = complaint.location_text
+        complaint_status = complaint.status
 
-    # Simulated routing call
-    await simulate_agency_work_order_post(
-        session,
-        complaint_id=complaint_id,
-        agency=work_order.agency,
-        work_order_id=str(work_order.id),
-        payload={
-            "work_order_id": str(work_order.id),
-            "agency": work_order.agency,
-            "priority": work_order.priority,
-            "description": work_order.description,
-        },
-    )
+        await audit(
+            session,
+            complaint_id=complaint_id,
+            event_type="ACT_COMPLETED",
+            message="Act node completed",
+            payload={
+                "work_order_id": str(work_order.id),
+                "priority": work_order.priority,
+                "email_preview": state_out.get("citizen_email_preview"),
+            },
+        )
 
-    return ComplaintStatus(
-        complaint_id=complaint_id,
-        status=complaint.status,
-        current_step=state_out.get("current_step"),
-        category=classification.category,
-        agency=classification.agency,
-        confidence=classification.confidence,
-        work_order_id=str(work_order.id),
-        priority=work_order.priority,
-        citizen_email_preview=state_out.get("citizen_email_preview"),
-    )
+        # Simulated routing call
+        await simulate_agency_work_order_post(
+            session,
+            complaint_id=complaint_id,
+            agency=work_order.agency,
+            work_order_id=str(work_order.id),
+            payload={
+                "work_order_id": str(work_order.id),
+                "agency": work_order.agency,
+                "priority": work_order.priority,
+                "description": work_order.description,
+            },
+        )
+
+        return ComplaintStatus(
+            complaint_id=complaint_id,
+            status=complaint_status,
+            current_step=state_out.get("current_step"),
+            category=classification.category,
+            agency=classification.agency,
+            confidence=classification.confidence,
+            work_order_id=str(work_order.id),
+            priority=work_order.priority,
+            citizen_email_preview=state_out.get("citizen_email_preview"),
+            email=complaint_email,
+            complaint_text=complaint_text,
+            location_text=complaint_location,
+            created_at=complaint_created_at,
+            updated_at=complaint_updated_at,
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Complaint processing failed: {exc}") from exc
 
 
 @router.get("/status/{complaint_id}", response_model=ComplaintStatus)
@@ -157,7 +175,52 @@ async def get_status(complaint_id: str, session: AsyncSession = Depends(get_sess
         confidence=c2.confidence if c2 else None,
         work_order_id=str(w3.id) if w3 else None,
         priority=w3.priority if w3 else None,
+        email=complaint.email,
+        complaint_text=complaint.complaint_text,
+        location_text=complaint.location_text,
+        created_at=complaint.created_at.isoformat() if complaint.created_at else None,
+        updated_at=complaint.updated_at.isoformat() if complaint.updated_at else None,
     )
+
+
+@router.get("/complaint/{complaint_id}/status", response_model=ComplaintStatus)
+async def get_complaint_status(complaint_id: str, session: AsyncSession = Depends(get_session)):
+    return await get_status(complaint_id, session)
+
+
+@router.get("/complaint/search", response_model=list[ComplaintStatus])
+async def search_complaints(
+    email: str = Query(..., description="Email address used to submit complaints"),
+    session: AsyncSession = Depends(get_session),
+):
+    q = select(Complaint).where(Complaint.email == email).order_by(Complaint.created_at.desc())
+    res = await session.execute(q)
+    complaints = list(res.scalars().all())
+    if not complaints:
+        raise HTTPException(status_code=404, detail="No complaints found")
+
+    results: list[ComplaintStatus] = []
+    for complaint in complaints:
+        c2 = (await session.execute(select(Classification).where(Classification.complaint_id == complaint.id))).scalar_one_or_none()
+        w3 = (await session.execute(select(WorkOrder).where(WorkOrder.complaint_id == complaint.id))).scalar_one_or_none()
+        results.append(
+            ComplaintStatus(
+                complaint_id=str(complaint.id),
+                status=complaint.status,
+                category=c2.category if c2 else None,
+                agency=c2.agency if c2 else None,
+                confidence=c2.confidence if c2 else None,
+                work_order_id=str(w3.id) if w3 else None,
+                priority=w3.priority if w3 else None,
+                email=complaint.email,
+                complaint_text=complaint.complaint_text,
+                location_text=complaint.location_text,
+                created_at=complaint.created_at.isoformat() if complaint.created_at else None,
+                updated_at=complaint.updated_at.isoformat() if complaint.updated_at else None,
+            )
+        )
+
+    return results
 
 
 @router.get("/logs", response_model=list[AuditLogOut])

@@ -1,22 +1,31 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+BACKEND_DIR = Path(__file__).resolve().parents[2]
+
+
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_file=str(BACKEND_DIR / ".env"), extra="ignore")
 
     app_env: str = "local"
     app_name: str = "SISPAA Intelligent GovTech Router"
     public_base_url: str = "http://localhost:8000"
 
-    # TiDB is MySQL-compatible; use SQLAlchemy mysql+aiomysql DSN.
-    database_url: str = "mysql+aiomysql://root:password@localhost:4000/sispaa_router?charset=utf8mb4"
+    # Local PostgreSQL default; override in backend/.env when needed.
+    database_url: str = "postgresql+asyncpg://postgres:1234@localhost:5432/sispaa_router"
 
     redis_url: str = "redis://localhost:6379/0"
     enable_redis_queue: bool = False
 
-    cors_origins: str = "http://localhost:3000"
+    cors_origins: str = "http://localhost:3000,http://localhost:3001"
+
+    jwt_secret_key: str = "secret-key-change-in-production"
+    jwt_algorithm: str = "HS256"
+    jwt_expiration_hours: int = 24
 
     groq_api_key: str | None = None
     groq_model: str = "llama-3.1-70b-versatile"
