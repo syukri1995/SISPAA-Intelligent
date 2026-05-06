@@ -52,7 +52,7 @@ class WorkOrder(Base):
     agency: Mapped[str] = mapped_column(String(64), nullable=False)
     priority: Mapped[str] = mapped_column(String(16), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
-    status: Mapped[str] = mapped_column(String(32), nullable=False, default="PENDING")  # PENDING, IN_PROGRESS, COMPLETED
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="PENDING")  # Lifecycle: PENDING -> ASSIGNED -> IN_PROGRESS -> COMPLETED
     assigned_to: Mapped[str | None] = mapped_column(String(36), nullable=True)  # User ID
     assigned_by: Mapped[str | None] = mapped_column(String(36), nullable=True)  # User ID who assigned
     created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

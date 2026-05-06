@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS work_orders (
   agency VARCHAR(64) NOT NULL,
   priority VARCHAR(16) NOT NULL,
   description TEXT NOT NULL,
-  status VARCHAR(32) NOT NULL DEFAULT 'CREATED',
+  status VARCHAR(32) NOT NULL DEFAULT 'PENDING',
   assigned_to CHAR(36) NULL,
   assigned_by CHAR(36) NULL,
   assigned_at TIMESTAMP NULL,

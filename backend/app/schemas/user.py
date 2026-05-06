@@ -9,15 +9,14 @@ class UserRegister(BaseModel):
     password: str = Field(min_length=8, max_length=255)
     full_name: str | None = Field(default=None, max_length=255)
     agency: str | None = Field(default=None, max_length=64)
-    role: str = Field(default="public", description="User role: admin, supervisor, worker, or public")
+    role: str = Field(default="public")
 
-    @field_validator("role")
+    @field_validator("role", mode="before")
     @classmethod
-    def validate_role(cls, v: str) -> str:
-        valid_roles = {"admin", "supervisor", "worker", "public"}
-        if v not in valid_roles:
-            raise ValueError(f"Invalid role. Must be one of: {', '.join(valid_roles)}")
-        return v
+    def force_public_role(cls, v: str) -> str:
+        """Self-registration always creates a public user.
+        Role elevation is done by admins via PATCH /auth/users/{id}."""
+        return "public"
 
 
 class UserLogin(BaseModel):

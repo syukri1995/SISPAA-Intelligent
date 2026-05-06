@@ -8,24 +8,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_session
 from app.db.user_models import User
-from app.schemas.user import UserRegister, UserLogin, TokenResponse, UserOut
 from app.schemas.user import UserRegister, UserLogin, TokenResponse, UserOut, UserUpdate
 from app.services.auth import hash_password, verify_password, create_access_token, decode_access_token
 from app.core.constants import VALID_ROLES, UserRole
 from app.core.dependencies import get_current_user
 
 
-class UserUpdate(BaseModel):
-    """Schema for updating user role and agency."""
-    role: str | None = None
-    agency: str | None = None
-
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/register", response_model=TokenResponse)
 async def register(payload: UserRegister, session: AsyncSession = Depends(get_session)):
-    """Register a new worker/admin user."""
+    """Register a new public user. Role elevation (worker/supervisor/admin) is done by admins via PUT /auth/users/{id}."""
     # Check if username exists
     q = select(User).where(User.username == payload.username)
     existing = await session.execute(q)
@@ -38,9 +32,8 @@ async def register(payload: UserRegister, session: AsyncSession = Depends(get_se
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Email already exists")
 
-    # Validate role
-    if payload.role not in VALID_ROLES:
-        raise HTTPException(status_code=400, detail=f"Invalid role. Must be one of: {', '.join(VALID_ROLES)}")
+    # Role is always "public" on self-registration (enforced by UserRegister schema validator).
+    # Use PUT /auth/users/{id} (admin only) to assign elevated roles.
 
     # Create new user
     user = User(

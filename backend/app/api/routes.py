@@ -90,7 +90,6 @@ async def submit_complaint(payload: ComplaintCreate, session: AsyncSession = Dep
             agency=str(state_out.get("agency", "OTHER")),
             priority=str(state_out.get("priority", "LOW")),
             description=str(state_out.get("work_order_description", "")),
-            status="CREATED",
         )
         session.add(work_order)
 

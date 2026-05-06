@@ -1,38 +1,41 @@
 import { NextRequest, NextResponse } from "next/server";
+import { jwtVerify } from "jose";
 
 const AUTH_TOKEN_COOKIE = "sispaa_token";
-const USER_ROLE_KEY = "user_role";
-const USER_ID_KEY = "user_id";
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.JWT_SECRET_KEY || "secret-key-change-in-production"
+);
 
-function isAuthed(req: NextRequest) {
-  return Boolean(req.cookies.get(AUTH_TOKEN_COOKIE)?.value);
+interface JWTPayload {
+  sub: string;
+  role: string;
+  agency?: string | null;
+  exp: number;
 }
 
-function getUserRole(req: NextRequest): string | null {
+async function getTokenPayload(req: NextRequest): Promise<JWTPayload | null> {
   try {
     const token = req.cookies.get(AUTH_TOKEN_COOKIE)?.value;
     if (!token) return null;
-    
-    // Extract role from localStorage (stored in HTTP header or cookie)
-    // For now, we'll rely on localStorage from frontend
-    // In a real app, you'd decode the JWT here
-    return req.headers.get("x-user-role") || null;
+    const { payload } = await jwtVerify(token, JWT_SECRET, {
+      algorithms: ["HS256"],
+    });
+    return payload as unknown as JWTPayload;
   } catch {
     return null;
   }
 }
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  const authed = isAuthed(req);
-  const userRole = getUserRole(req);
+  const tokenPayload = await getTokenPayload(req);
+  const authed = tokenPayload !== null;
+  const userRole = tokenPayload?.role ?? null;
 
-  // Redirect unauthenticated users to login (except for public pages)
+  // Redirect unauthenticated users away from protected pages
   if (!authed && !pathname.startsWith("/auth")) {
-    // Allow public pages
-    const publicPages = ["/", "/dashboard", "/submit", "/auth/login", "/auth/register"];
+    const publicPages = ["/", "/submit", "/auth/login", "/auth/register"];
     if (!publicPages.includes(pathname)) {
-      // All other pages require auth
       const url = req.nextUrl.clone();
       url.pathname = "/auth/login";
       url.searchParams.set("next", pathname);
@@ -40,7 +43,7 @@ export function middleware(req: NextRequest) {
     }
   }
 
-  // Protect admin routes
+  // Protect /admin routes — must be authenticated AND have role "admin"
   if (pathname.startsWith("/admin")) {
     if (!authed) {
       const url = req.nextUrl.clone();
@@ -48,16 +51,12 @@ export function middleware(req: NextRequest) {
       url.searchParams.set("next", pathname);
       return NextResponse.redirect(url);
     }
-
-    // Check if user is admin (from localStorage or JWT)
-    // This is a basic check; more robust checking happens on frontend
-    const isAdmin = userRole === "admin";
-    if (!isAdmin) {
+    if (userRole !== "admin") {
       return NextResponse.redirect(new URL("/dashboard", req.nextUrl));
     }
   }
 
-  // Require auth for worker area
+  // Protect /worker routes — must be authenticated and have role worker/supervisor/admin
   if (pathname.startsWith("/worker")) {
     if (!authed) {
       const url = req.nextUrl.clone();
@@ -65,29 +64,24 @@ export function middleware(req: NextRequest) {
       url.searchParams.set("next", pathname);
       return NextResponse.redirect(url);
     }
-  }
-
-  // If already logged in, redirect from auth pages to dashboard
-  if (pathname.startsWith("/auth")) {
-    if (authed) {
-      const url = req.nextUrl.clone();
-      url.pathname = "/dashboard";
-      url.search = "";
-      return NextResponse.redirect(url);
+    const workerRoles = ["worker", "supervisor", "admin"];
+    if (!workerRoles.includes(userRole ?? "")) {
+      return NextResponse.redirect(new URL("/dashboard", req.nextUrl));
     }
   }
 
-  // Redirect root to login if not authenticated
+  // Redirect already-logged-in users away from auth pages
+  if (pathname.startsWith("/auth") && authed) {
+    return NextResponse.redirect(new URL("/dashboard", req.nextUrl));
+  }
+
+  // Redirect root
   if (pathname === "/") {
-    if (authed) {
-      const url = req.nextUrl.clone();
-      url.pathname = "/dashboard";
-      return NextResponse.redirect(url);
-    } else {
-      const url = req.nextUrl.clone();
-      url.pathname = "/auth/login";
-      return NextResponse.redirect(url);
-    }
+    return NextResponse.redirect(
+      authed
+        ? new URL("/dashboard", req.nextUrl)
+        : new URL("/auth/login", req.nextUrl)
+    );
   }
 
   return NextResponse.next();
@@ -96,4 +90,3 @@ export function middleware(req: NextRequest) {
 export const config = {
   matcher: ["/", "/worker/:path*", "/admin/:path*", "/auth/:path*", "/dashboard", "/submit", "/status"],
 };
-
